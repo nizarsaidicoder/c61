@@ -1,0 +1,40 @@
+---
+title: "Evolution of Top Names"
+output: html_document
+---
+
+## Setup
+```{r setup, message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(readr)
+
+
+data <- read_csv("../data.csv")
+colnames(data)
+
+
+data <- data %>%
+  mutate(annais = as.numeric(as.character(annais))) %>%
+  filter(!is.na(annais)) %>%
+  filter(preusuel != "_PRENOMS_RARES") %>%
+  mutate(decade = (annais %/% 10) * 10)
+
+data_agg <- data %>%
+  group_by(decade, preusuel) %>%
+  summarise(total = sum(nombre, na.rm = TRUE), .groups = "drop")
+
+top_names <- data_agg %>%
+  group_by(preusuel) %>%
+  summarise(total_all = sum(total)) %>%
+  arrange(desc(total_all)) %>%
+  slice_head(n = 10)
+
+data_top <- data_agg %>%
+  filter(preusuel %in% top_names$preusuel)
+
+ggplot(data_top, aes(x = decade, y = total, color = preusuel)) +
+  geom_line() +
+  labs(title = "Evolution of Top Names by Decade",
+       x = "Decade",
+       y = "Number of Births")

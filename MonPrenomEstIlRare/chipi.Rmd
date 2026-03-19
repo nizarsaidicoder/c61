@@ -10,7 +10,7 @@ library(ggplot2)
 library(readr)
 
 
-data <- read_csv("../data.csv")
+data <- read_csv2("../data.csv")
 colnames(data)
 
 
@@ -28,7 +28,7 @@ top_names <- data_agg %>%
   group_by(preusuel) %>%
   summarise(total_all = sum(total)) %>%
   arrange(desc(total_all)) %>%
-  slice_head(n = 10)
+  slice_head(n = 100)
 
 data_top <- data_agg %>%
   filter(preusuel %in% top_names$preusuel)

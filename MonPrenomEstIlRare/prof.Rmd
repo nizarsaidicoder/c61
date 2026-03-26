@@ -1,0 +1,92 @@
+---
+title: "prof"
+output: html_document
+---
+
+## 1. Load Libraries
+
+```{r load-libraries}
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+## 2. Load and Explore Data
+
+```{r load-data}
+data <- read_csv2("../data.csv")
+```
+
+## 3. Data Cleaning and Preparation
+
+```{r clean-data}
+# Clean and transform the data
+data_clean <- data %>%
+  # Convert birth year to numeric
+  mutate(annais = as.numeric(as.character(annais))) %>%
+  # Remove rows with missing birth years
+  filter(!is.na(annais)) %>%
+  # Remove rare names category
+  filter(preusuel != "_PRENOMS_RARES") %>%
+  # Create decade grouping
+  mutate(decade = (annais %/% 10) * 10)
+
+head(data_clean)
+```
+
+## 4. Aggregate Data by Decade and Name
+
+```{r aggregate-data}
+# Aggregate births by decade and name
+data_agg <- data_clean %>%
+  group_by(decade, preusuel) %>%
+  summarise(
+    total = sum(nombre, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+head(data_agg)
+```
+
+## 5. Filter Data for Prof Names
+
+```{r filter-name}
+profs_names <- c(
+  "NICOLAS", "JULIEN", "MATHIEU", "AURELIE", "ROMAIN",
+  "ISABELLE", "PHILIPPE", "REMY", "PIERRE", "CLAIRE",
+  "CEDRIC", "AGNES", "VERONIQUE", "ERIC", "ADRIEN",
+  "RENE", "ETIENNE", "ALI"
+)
+
+data_prof <- data_agg %>%
+  filter(preusuel %in% profs_names)
+
+# Diagnostic: check which names actually matched
+matched   <- intersect(profs_names, unique(data_prof$preusuel))
+unmatched <- setdiff(profs_names, matched)
+
+cat("Matched names  :", paste(matched,   collapse = ", "), "\n")
+cat("Unmatched names:", paste(unmatched, collapse = ", "), "\n")
+```
+
+## 6. Visualization: Evolution of Prof Names
+
+```{r plot-evolution, fig.width=14, fig.height=8}
+ggplot(data_prof, aes(x = decade, y = total, fill = preusuel)) +
+  geom_area(linewidth = 0.8, alpha = 0.7, position = "identity") +
+  labs(
+    title = "L'évolution de la popularité des prénoms des professeurs de la promotion",
+    x = "Décennie",
+    y = "Nombre de naissances"
+  ) +
+  facet_wrap(~preusuel, scales = "free_y") +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title   = element_text(size = 12, face = "bold"),
+    axis.text.y  = element_blank(),
+    legend.position = "none",
+    panel.grid.major = element_line(color = "gray90"),
+    panel.grid.minor = element_blank()
+  )
+```

@@ -115,16 +115,17 @@ ggplot(data_top, aes(x = decade, y = total, fill = preusuel)) +
     y = "Number of Births",
     color = "Name"
   ) +
-  facet_wrap(.~preusuel) +
+  facet_wrap(.~preusuel, scales = "free_y") +
   theme_minimal() +
   theme(
     plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
     axis.title = element_text(size = 12, face = "bold"),
-    legend.position = "right",
+    legend.position = "none",
     legend.text = element_text(size = 8),
+    axis.text.y = element_blank(),
     panel.grid.major = element_line(color = "gray90"),
     panel.grid.minor = element_blank()
-  )
+  ) 
 ```
 
 ## 8. Alternative Visualization: Top 10 Names Only

@@ -52,10 +52,10 @@ head(data_agg)
 
 ```{r filter-name}
 profs_names <- c(
-  "NICOLAS", "JULIEN", "MATHIEU", "AURELIE", "ROMAIN",
-  "ISABELLE", "PHILIPPE", "REMY", "PIERRE", "CLAIRE",
-  "CEDRIC", "AGNES", "VERONIQUE", "ERIC", "ADRIEN",
-  "RENE", "ETIENNE", "ALI"
+  "NICOLAS", "JULIEN", "MATHIEU", "AURÉLIE", "ROMAIN",
+  "ISABELLE", "PHILIPPE", "RÉMY", "PIERRE", "CLAIRE",
+  "CEDRIC", "AGNS", "VÉRONIQUE", "ERIC", "ADRIEN",
+  "RENÉ", "ETIENNE", "ALI"
 )
 
 data_prof <- data_agg %>%
@@ -72,21 +72,80 @@ cat("Unmatched names:", paste(unmatched, collapse = ", "), "\n")
 ## 6. Visualization: Evolution of Prof Names
 
 ```{r plot-evolution, fig.width=14, fig.height=8}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(scales)
+
+# Visualization: Evolution of Prof Names
 ggplot(data_prof, aes(x = decade, y = total, fill = preusuel)) +
-  geom_area(linewidth = 0.8, alpha = 0.7, position = "identity") +
+  geom_area(alpha = 0.85) +
+  facet_wrap(~preusuel, scales = "free_y") +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_y_continuous(labels = label_number()) +
   labs(
-    title = "L'évolution de la popularité des prénoms des professeurs de la promotion",
+    title = "Popularité des Prénoms des Professeurs",
+    subtitle = "Fréquence par décennie",
+    x = "Décennie",
+    y = "Nombre de naissances"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    strip.background = element_rect(fill = "gray96", color = NA),
+    strip.text = element_text(face = "bold", size = 10),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(1.2, "lines"),
+    plot.title = element_text(face = "bold", size = 16),
+    axis.text.x = element_text(angle = 45, vjust = 0.5)
+  )
+```
+
+```{r}
+library(svglite)
+library(scales)
+library(viridis)
+
+# Define the modernized plot
+p <- ggplot(data_prof, aes(x = decade, y = total, fill = preusuel)) +
+  geom_area(alpha = 0.85) +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_y_continuous(labels = label_number()) +
+  labs(
+    title = "Évolution de la popularité des prénoms des professeurs",
+    subtitle = "Fréquence totale par décennie",
     x = "Décennie",
     y = "Nombre de naissances"
   ) +
   facet_wrap(~preusuel, scales = "free_y") +
   theme_minimal() +
   theme(
-    plot.title   = element_text(size = 16, face = "bold", hjust = 0.5),
-    axis.title   = element_text(size = 12, face = "bold"),
-    axis.text.y  = element_blank(),
+    plot.title      = element_text(size = 18, face = "bold", hjust = 0.5),
+    plot.subtitle   = element_text(size = 12, color = "gray40", hjust = 0.5, margin = margin(b = 15)),
+    axis.title      = element_text(size = 12, face = "bold"),
+    strip.background = element_rect(fill = "gray96", color = NA),
+    strip.text      = element_text(face = "bold", size = 11),
     legend.position = "none",
+    panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "gray90"),
-    panel.grid.minor = element_blank()
+    panel.spacing   = unit(1.2, "lines")
   )
+
+# Export as SVG
+ggsave("prof_names_evolution_modern.svg", plot = p, device = "svg", width = 14, height = 8)
+
+```
+
+
+```{r}
+library(tidyr)
+
+# Prepare data: Ensure all decades are represented for each name
+data_csv_export <- data_prof %>%
+  complete(decade, preusuel, fill = list(total = 0)) %>%
+  rename(year = decade, name = preusuel, count = total)
+
+# Write to CSV
+write_csv(data_csv_export, "prof_names_evolution.csv")
 ```
